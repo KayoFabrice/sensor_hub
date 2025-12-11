@@ -1,0 +1,27 @@
+name: Build Raspberry Pi Module
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # ← Ton Dockerfile devient l'environnement
+    container:
+      image: ghcr.io/kayofabrice/rpi-kernel-dev:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build module
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
+
+      - name: Upload compiled module
+        uses: actions/upload-artifact@v3
+        with:
+          name: rpi-module
+          path: '*.ko'

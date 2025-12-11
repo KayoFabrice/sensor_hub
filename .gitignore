@@ -23,6 +23,7 @@ user_app/*.bin
 # Temporary files
 *.tmp
 *.bak
+*.mod
 
 # Build directories
 build/
