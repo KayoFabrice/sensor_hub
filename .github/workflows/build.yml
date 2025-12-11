@@ -11,6 +11,9 @@ jobs:
     # ← Ton Dockerfile devient l'environnement
     container:
       image: ghcr.io/kayofabrice/rpi-kernel-dev:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
