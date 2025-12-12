@@ -1,30 +1,51 @@
-name: Build Raspberry Pi Module
+name: Build and Test Raspberry Pi Kernel Module
 
 on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
     types: [ opened, synchronize, reopened ]
-    
+
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
-    # ← Ton Dockerfile devient l'environnement
     container:
       image: ghcr.io/kayofabrice/rpi-kernel-dev:latest
-      
+
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Build module
+      # Build the kernel module
+      - name: Build Kernel Module
         run: |
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
 
-      - name: Upload compiled module
+      # Launch QEMU in the background
+      - name: Start QEMU
+        run: |
+          qemu-system-aarch64 -M raspi4 -m 2G \
+            -kernel kernel8.img \
+            -dtb bcm2711-rpi-4-b.dtb \
+            -drive file=raspios.img,format=raw,if=sd,cache=writeback \
+            -append "root=/dev/mmcblk0p2 rw console=serial0,115200" \
+            -serial mon:stdio \
+            -net user,hostfwd=tcp::2222-:22 -net nic \
+            -nographic &
+          sleep 30  # wait for QEMU to boot fully
+
+      # Deploy and insert the kernel module
+      - name: Deploy and Insert Module
+        run: |
+          sshpass -p "raspberry" scp -P 2222 **/*.ko pi@localhost:/home/pi/
+          ssh -p 2222 pi@localhost "sudo insmod /home/pi/$(basename **/*.ko)"
+          ssh -p 2222 pi@localhost "dmesg | tail"
+
+      # Upload the compiled module as artifact
+      - name: Upload Compiled Module
         uses: actions/upload-artifact@v4
         with:
-          name: rpi-module
+          name: rpi-kernel-module
           path: '**/*.ko'
