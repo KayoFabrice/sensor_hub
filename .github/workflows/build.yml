@@ -40,18 +40,13 @@ jobs:
             -net user,hostfwd=tcp::2222-:22 -net nic \
             -nographic &
           sleep 30  # wait for QEMU to boot fully
-          echo "Waiting for QEMU SSH..."
-          until ssh -o StrictHostKeyChecking=no -p 2222 pi@localhost "echo ok" 2>/dev/null; do
-            sleep 5
-          done
-          echo "QEMU is ready!"
 
       # Deploy and insert the kernel module
-      - name: Deploy and Insert Module
-        run: |
-          sshpass -p "raspberry" scp -P 2222 **/*.ko pi@localhost:/home/pi/
-          ssh -p 2222 pi@localhost "sudo insmod /home/pi/$(basename **/*.ko)"
-          ssh -p 2222 pi@localhost "dmesg | tail"
+      #- name: Deploy and Insert Module
+       # run: |
+        #  sshpass -p "raspberry" scp -P 2222 **/*.ko pi@localhost:/home/pi/
+         # ssh -p 2222 pi@localhost "sudo insmod /home/pi/$(basename **/*.ko)"
+          #ssh -p 2222 pi@localhost "dmesg | tail"
 
       # Upload the compiled module as artifact
       - name: Upload Compiled Module
